@@ -1,0 +1,75 @@
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: consul-data
+  namespace: consul
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-storage
+---
+
+# Create a Headless Service for Consul
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul
+  namespace: consul
+spec:
+  clusterIP: None
+  selector:
+    app: consul
+
+---
+
+# Create a StatefulSet for Consul
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: consul
+spec:
+  serviceName: consul
+  replicas: 1  # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: consul
+  template:
+    metadata:
+      labels:
+        app: consul
+    spec:
+      containers:
+        - name: consul
+          image: consul:1.15.4
+          ports:
+            - containerPort: 8300  # RPC
+            - containerPort: 8301  # LAN gossip
+            - containerPort: 8302  # WAN gossip
+            - containerPort: 8500  # HTTP UI and API
+            - containerPort: 8600  # DNS
+          volumeMounts:
+            - name: consul-data
+              mountPath: /consul/data
+          args: ["agent", "-server", "-bootstrap-expect=3", "-ui", "-client=0.0.0.0"]
+          readinessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: consul-data
+          persistentVolumeClaim:
+            claimName: consul-data
