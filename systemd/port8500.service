@@ -1,0 +1,15 @@
+[Unit]
+Description=Kubectl Port Forward 8500
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=vagrant
+Group=vagrant
+Type=simple
+ExecStart=/bin/bash -c "kubectl port-forward service/consul-ui -n consul --address 192.168.56.201 8500:8500"
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
