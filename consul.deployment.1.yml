@@ -1,10 +1,8 @@
----
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: consul-data
-  namespace: consul
+  name: consul-1-data
+  namespace: consul-1
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,15 +12,14 @@ spec:
   storageClassName: local-storage
 ---
 
-# Create a Service for Consul to expose ports 8500 and 8600
 apiVersion: v1
 kind: Service
 metadata:
-  name: consul-ui
-  namespace: consul
+  name: consul-1-ui
+  namespace: consul-1
 spec:
   selector:
-    app: consul
+    app: consul-1
   ports:
     - name: http
       protocol: TCP
@@ -34,36 +31,35 @@ spec:
       targetPort: 8600
 ---
 
-# Create a StatefulSet for Consul
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: consul
-  namespace: consul
+  name: consul-1
+  namespace: consul-1
 spec:
-  serviceName: consul
-  replicas: 1  # Adjust the number of replicas as needed
+  serviceName: consul-1
+  replicas: 1
   selector:
     matchLabels:
-      app: consul
+      app: consul-1
   template:
     metadata:
       labels:
-        app: consul
+        app: consul-1
     spec:
       containers:
-        - name: consul
+        - name: consul-1
           image: consul:1.15.4
           ports:
-            - containerPort: 8300  # RPC
-            - containerPort: 8301  # LAN gossip
-            - containerPort: 8302  # WAN gossip
-            - containerPort: 8500  # HTTP UI and API
-            - containerPort: 8600  # DNS
+            - containerPort: 8300
+            - containerPort: 8301
+            - containerPort: 8302
+            - containerPort: 8500
+            - containerPort: 8600
           volumeMounts:
-            - name: consul-data
+            - name: consul-1-data
               mountPath: /consul/data
-          args: ["agent", "-server", "-bootstrap-expect=3", "-ui", "-client=0.0.0.0"]
+          args: ["agent", "-server", "-ui", "-client=0.0.0.0"]
           readinessProbe:
             httpGet:
               path: /v1/status/leader
@@ -77,6 +73,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
       volumes:
-        - name: consul-data
+        - name: consul-1-data
           persistentVolumeClaim:
-            claimName: consul-data
+            claimName: consul-1-data
+

@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: consul-2-data
+  namespace: consul-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-storage
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul-2
+  namespace: consul-2
+spec:
+  serviceName: consul-2
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consul-2
+  template:
+    metadata:
+      labels:
+        app: consul-2
+    spec:
+      containers:
+        - name: consul-2
+          image: consul:1.15.4
+          ports:
+            - containerPort: 8300
+            - containerPort: 8301
+            - containerPort: 8302
+            - containerPort: 8500
+            - containerPort: 8600
+          volumeMounts:
+            - name: consul-2-data
+              mountPath: /consul/data
+          args: ["consul", "agent", "-server", "-data-dir=/consul/data", "-retry-join=${CONSUL_1_IP}", "-ui", "-client=0.0.0.0"]
+          readinessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /v1/status/leader
+              port: 8500
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: consul-2-data
+          persistentVolumeClaim:
+            claimName: consul-2-data
+

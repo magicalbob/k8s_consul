@@ -1,7 +1,8 @@
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: consul-data
+  name: consul-1-data
 spec:
   capacity:
     storage: 10Gi
@@ -10,7 +11,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: local-storage
   local:
-    path: $PWD/consul-data
+    path: $PWD/consul-1-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -20,3 +21,48 @@ spec:
           values:
           - ${NODE_NAME}
 
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: consul-2-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: $PWD/consul-2-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - ${NODE_NAME}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: consul-3-data
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: $PWD/consul-3-data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - ${NODE_NAME}

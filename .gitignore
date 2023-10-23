@@ -1,2 +1,4 @@
 kind-config.yaml
 consul.pv.yml
+consul.deployment.2.yml
+consul.deployment.3.yml

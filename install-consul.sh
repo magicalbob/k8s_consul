@@ -35,11 +35,21 @@ fi
 # install local storage
 kubectl apply -f  local-storage-class.yml
 
-# create postgresql namespace, if it doesn't exist
-kubectl get ns consul 2> /dev/null
+# create 3 consul namespaces, if they do not exist
+kubectl get ns consul-1 2> /dev/null
 if [ $? -eq 1 ]
 then
-    kubectl create namespace consul
+    kubectl create namespace consul-1
+fi
+kubectl get ns consul-2 2> /dev/null
+if [ $? -eq 1 ]
+then
+    kubectl create namespace consul-2
+fi
+kubectl get ns consul-3 2> /dev/null
+if [ $? -eq 1 ]
+then
+    kubectl create namespace consul-3
 fi
 
 # sort out persistent volume
@@ -49,9 +59,32 @@ if [ "X{$USE_KIND}" == "XX" ];then
 else
   export NODE_NAME=$(kubectl get nodes | grep -v ^NAME|grep -v control-plane|cut -d\  -f1|head -1)
   envsubst < consul.pv.linux.template > consul.pv.yml
-  echo mkdir -p ${PWD}/consul-data|ssh -o StrictHostKeyChecking=no ${NODE_NAME}
+  echo mkdir -p ${PWD}/consul-1-data|ssh -o StrictHostKeyChecking=no ${NODE_NAME}
+  echo mkdir -p ${PWD}/consul-2-data|ssh -o StrictHostKeyChecking=no ${NODE_NAME}
+  echo mkdir -p ${PWD}/consul-3-data|ssh -o StrictHostKeyChecking=no ${NODE_NAME}
 fi
 kubectl apply -f consul.pv.yml
 
 # consul deployment
-kubectl apply -f consul.deployment.yml
+kubectl apply -f consul.deployment.1.yml
+
+# Wait for it to be running
+while true; do
+  # Run the kubectl command and capture the output
+  output=$(kubectl get all -n consul-1 2>&1)
+
+  # Check if the output contains the target status
+  if [[ $output =~ "Running" ]]; then
+    break
+  else
+    echo "Waiting for consul-1 ..."
+    sleep 5
+  fi
+done
+
+export CONSUL_1_IP=$(kubectl exec service/consul-1-ui -n consul-1 -- ip a show eth0|grep 'inet '|sed 's/inet /^/'|cut -d^ -f2|cut -d/ -f1)
+
+envsubst < consul.deployment.2.template > consul.deployment.2.yml
+kubectl apply -f consul.deployment.2.yml
+envsubst < consul.deployment.3.template > consul.deployment.3.yml
+kubectl apply -f consul.deployment.3.yml
