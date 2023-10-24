@@ -7,7 +7,7 @@ After=network-online.target
 User=vagrant
 Group=vagrant
 Type=simple
-ExecStart=/bin/bash -c "kubectl port-forward service/consul-ui -n consul --address 192.168.56.201 8500:8500"
+ExecStart=/bin/bash -c "kubectl port-forward service/consul-1-ui -n consul-1 --address 192.168.56.201 8500:8500"
 Restart=always
 RestartSec=5s
 
