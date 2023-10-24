@@ -59,7 +59,7 @@ spec:
           volumeMounts:
             - name: consul-1-data
               mountPath: /consul/data
-          args: ["agent", "-server", "-ui", "-client=0.0.0.0"]
+          args: ["agent", "-server", "-bootstrap-expect=3", "-ui", "-client=0.0.0.0"]
           readinessProbe:
             httpGet:
               path: /v1/status/leader

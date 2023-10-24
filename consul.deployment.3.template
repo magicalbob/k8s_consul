@@ -40,7 +40,7 @@ spec:
           volumeMounts:
             - name: consul-3-data
               mountPath: /consul/data
-          args: ["agent", "-server", "-data-dir=/consul/data", "-retry-join=${CONSUL_1_IP}", "-ui", "-client=0.0.0.0"]
+          args: ["agent", "-server", "-bootstrap-expect=3", "-data-dir=/consul/data", "-retry-join=${CONSUL_1_IP}", "-ui", "-client=0.0.0.0"]
           readinessProbe:
             httpGet:
               path: /v1/status/leader
